@@ -35,12 +35,17 @@ if [[ $# -eq 0 ]]; then
     exit 2
 fi
 
+# Prompt setup
+bold=$'\e[1m'
+reset=$'\e[0m'
+prompt="jq> "
+
 # Read history and ensure it's written on exit
 history -r
 trap 'history -w' EXIT
 
 # REPL, with readline editing/history
-while read -e -r -p "jq> " cmd; do
+while read -e -r -p "${bold}${prompt}${reset}" cmd; do
     if [[ -n "$cmd" ]]; then
         # Each command line is run as a file so that this program can accept an
         # arbitrary mix of jq options and filenames as its own arguments and just
