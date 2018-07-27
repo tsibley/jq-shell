@@ -1,0 +1,55 @@
+#!/bin/bash
+# usage: jq-shell [jq options] <file.json> [<file.json>]
+
+# MIT License
+#
+# Copyright © 2018 Thomas Sibley <tom at zulutango.org>
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# Note: "Strict mode" (set -euo pipefail) is not enabled because it would cause
+# this program itself to exit as soon as an invalid jq command was entered at
+# the prompt.
+
+: "${PAGER:=less -SRFXi}"
+: "${HISTFILE:=$HOME/.jq_history}"
+
+if [[ $# -eq 0 ]]; then
+    echo "usage: $(basename $0) [jq options] <file.json> [<file.json>]"
+    exit 2
+fi
+
+# Read history and ensure it's written on exit
+history -r
+trap 'history -w' EXIT
+
+# REPL, with readline editing/history
+while read -e -r -p "jq> " cmd; do
+    if [[ -n "$cmd" ]]; then
+        # Each command line is run as a file so that this program can accept an
+        # arbitrary mix of jq options and filenames as its own arguments and just
+        # pass them along.  Normally the filter needs to be between the options and
+        # filenames when specified on the command line, but using --from-file
+        # avoids this need.
+        jq --from-file /dev/stdin --color-output "$@" <<<"$cmd" | $PAGER
+
+        # Add command to history
+        history -s "$cmd"
+    fi
+done
