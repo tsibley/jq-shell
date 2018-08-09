@@ -61,24 +61,37 @@ if [[ $# -eq 0 ]]; then
     exit 2
 fi
 
+# Save argument list for clarity later on.
+arguments=("$@")
+
 # Prompt setup
 bold=$'\e[1m'
 reset=$'\e[0m'
 prompt="jq> "
 
+# The middle part of read, eval, print, loop
+eval-print() {
+    local cmd="$*"
+
+    # Each command line is run as a file so that this program can accept an
+    # arbitrary mix of jq options and filenames as its own arguments and just
+    # pass them along.  Normally the filter needs to be between the options and
+    # filenames when specified on the command line, but using --from-file
+    # avoids this need.
+    jq --from-file /dev/stdin --color-output "${arguments[@]}" <<<"$cmd" | $PAGER
+}
+
 # Read history and ensure it's written on exit
 history -r
 trap 'history -w' EXIT
 
+# Start by showing the document, like a pager
+eval-print "."
+
 # REPL, with readline editing/history
 while read -e -r -p "${bold}${prompt}${reset}" cmd; do
     if [[ -n "$cmd" ]]; then
-        # Each command line is run as a file so that this program can accept an
-        # arbitrary mix of jq options and filenames as its own arguments and just
-        # pass them along.  Normally the filter needs to be between the options and
-        # filenames when specified on the command line, but using --from-file
-        # avoids this need.
-        jq --from-file /dev/stdin --color-output "$@" <<<"$cmd" | $PAGER
+        eval-print "$cmd"
 
         # Add command to history
         history -s "$cmd"
