@@ -31,11 +31,19 @@
 : "${PAGER:=less -SRFXi}"
 : "${HISTFILE:=$HOME/.jq_history}"
 
+# Helper for multiple traps on EXIT
+exit_commands=()
+
+on-exit() {
+    exit_commands+=("$*;")
+    trap "${exit_commands[*]}" EXIT
+}
+
 # Handle input from stdin when stdin isn't a terminal
 if [[ ! -t 0 ]]; then
     # Write input to a temporary file.
     tmpfile="$(mktemp -t)"
-    trap 'rm "$tmpfile"' EXIT
+    on-exit 'rm "$tmpfile"'
     cat > "$tmpfile"
 
     # Append that filename to the argument list.
@@ -83,7 +91,7 @@ eval-print() {
 
 # Read history and ensure it's written on exit
 history -r
-trap 'history -w' EXIT
+on-exit history -w
 
 # Start by showing the document, like a pager
 eval-print "."
