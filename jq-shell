@@ -1,5 +1,6 @@
 #!/bin/bash
-# usage: jq-shell [jq options] <file.json> [<file.json>]
+# usage: jq-shell [jq options] [<file.json> [<file.json>]]
+#        ... | jq-shell [jq options]
 
 # MIT License
 #
@@ -29,6 +30,20 @@
 
 : "${PAGER:=less -SRFXi}"
 : "${HISTFILE:=$HOME/.jq_history}"
+
+# Handle input from stdin when stdin isn't a terminal
+if [[ ! -t 0 ]]; then
+    # Write input to a temporary file.
+    tmpfile="$(mktemp -t)"
+    trap 'rm "$tmpfile"' EXIT
+    cat > "$tmpfile"
+
+    # Append that filename to the argument list.
+    set -- "$@" "$tmpfile"
+
+    # Re-open stdin to the terminal so the REPL works as expected.
+    exec < /dev/tty
+fi
 
 if [[ $# -eq 0 ]]; then
     echo "usage: $(basename $0) [jq options] <file.json> [<file.json>]"
