@@ -45,8 +45,19 @@ if [[ ! -t 0 ]]; then
     exec < /dev/tty
 fi
 
+# At least one filename is required, so if we don't have more than one
+# argument, just show the usage.
 if [[ $# -eq 0 ]]; then
-    echo "usage: $(basename $0) [jq options] <file.json> [<file.json>]"
+    # This would be a tiny Perl one-liner, but let's keep this in bash. ;-)
+    while read -r usage; do
+        if [[ $usage =~ ^#! ]]; then
+            continue
+        elif [[ $usage == "" ]]; then
+            break
+        else
+            echo "${usage#\#?}"
+        fi
+    done < "$0"
     exit 2
 fi
 
