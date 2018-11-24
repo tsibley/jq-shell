@@ -1,0 +1,28 @@
+#!/bin/bash
+# usage: jsonp-unwrap <callback>
+#
+# Takes JSONP on stdin and the callback name as the sole argument.  Outputs
+# unwrapped JSON.
+
+set -euo pipefail
+
+if [[ $# -ne 1 || -z $1 ]]; then
+    # This would be a tiny Perl one-liner, but let's keep this in bash. ;-)
+    while read -r usage; do
+        if [[ $usage =~ ^#! ]]; then
+            continue
+        elif [[ $usage == "" ]]; then
+            break
+        elif [[ $usage == "#" ]]; then
+            echo
+        else
+            echo "${usage#\# }"
+        fi
+    done < "$0"
+    exit 1
+fi
+
+callback="$1"
+shift
+
+exec jq --raw-input --slurp --raw-output "def $callback(f): f; $(</dev/stdin)" -- /dev/null
