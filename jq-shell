@@ -73,8 +73,8 @@ fi
 arguments=("$@")
 
 # Prompt setup
-bold=$'\e[1m'
-reset=$'\e[0m'
+bold=$'\001\e[1m\002'
+reset=$'\001\e[0m\002'
 prompt="jq> "
 
 # The middle part of read, eval, print, loop
