@@ -72,6 +72,9 @@ fi
 # Save argument list for clarity later on.
 arguments=("$@")
 
+# Output to a file, optionally
+output=
+
 # Prompt setup
 bold=$'\001\e[1m\002'
 reset=$'\001\e[0m\002'
@@ -83,11 +86,26 @@ Several special jq-shell commands are available:
 
 :help, help         Show this help
 :man, man           Show the jq manpage
+:output [file]      Redirect output to the given file.
+                    Disables redirection if no file is given.
 
 Otherwise, the prompt input is run as a standard jq filter.
 
 Leave the shell by typing Ctrl-D (^D).
 .
+}
+
+set-output() {
+    local cmd
+    declare -g output
+
+    read cmd output <<<"$1"
+
+    if [[ -z $output ]]; then
+        echo "Sending output to the terminal"
+    else
+        echo "Sending output to the file \"$output\""
+    fi
 }
 
 # The middle part of read, eval, print, loop
@@ -99,7 +117,11 @@ eval-print() {
     # pass them along.  Normally the filter needs to be between the options and
     # filenames when specified on the command line, but using --from-file
     # avoids this need.
-    jq --from-file /dev/stdin --color-output "${arguments[@]}" <<<"$cmd" | $PAGER
+    if [[ -z $output ]]; then
+        jq --from-file /dev/stdin --color-output "${arguments[@]}" <<<"$cmd" | $PAGER
+    else
+        jq --from-file /dev/stdin "${arguments[@]}" <<<"$cmd" > $output
+    fi
 }
 
 # Read history and ensure it's written on exit
@@ -117,6 +139,8 @@ while read -e -r -p "${bold}${prompt}${reset}" cmd; do
                 print-help;;
             :man|man)
                 man jq | $PAGER;;
+            :output*)
+                set-output "$cmd";;
             *)
                 eval-print "$cmd";;
         esac
