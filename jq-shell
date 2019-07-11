@@ -132,7 +132,7 @@ on-exit history -w
 eval-print "."
 
 # REPL, with readline editing/history
-while read -e -r -p "${bold}${prompt}${reset}" cmd; do
+while read -e -r -p "${bold}${prompt}${reset}" -i "$cmd" cmd; do
     if [[ -n "$cmd" ]]; then
         case "$cmd" in
             :help|help)
