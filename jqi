@@ -1,6 +1,6 @@
 #!/bin/bash
-# usage: jq-shell [jq options] [<file.json> [<file.json>]]
-#        ... | jq-shell [jq options]
+# usage: jqi [jq options] [<file.json> [<file.json>]]
+#        ... | jqi [jq options]
 
 # MIT License
 #
@@ -82,7 +82,7 @@ prompt="jq> "
 
 print-help() {
     cat <<"."
-Several special jq-shell commands are available:
+Several special jqi commands are available:
 
 :help, help         Show this help
 :man, man           Show the jq manpage
@@ -91,7 +91,7 @@ Several special jq-shell commands are available:
 
 Otherwise, the prompt input is run as a standard jq filter.
 
-Leave the shell by typing Ctrl-D (^D).
+Exit jqi by typing Ctrl-D (^D).
 .
 }
 
